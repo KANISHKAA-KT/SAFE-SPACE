@@ -1,0 +1,58 @@
+// services/geminiService.ts
+ import { GoogleGenerativeAI } from '@google/genai';
+ const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY!);
+ export class MentalHealthAI {
+ private model;
+ constructor() {
+ this.model = genAI.getGenerativeModel({ 
+      model: "gemini-pro",
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 500,
+      }
+    });
+  }
+  async getCulturallyAwareResponse(userInput: string, context: any = {}) {
+    const culturalPrompt = `
+    You are MindBridge AI, a culturally-sensitive mental health companion for Indian yout
+    
+    CULTURAL CONTEXT:
+    - Understand Indian family dynamics and "log kya kahenge" (what will people say) ment
+    - Be sensitive to academic pressure from competitive exams (JEE, NEET, UPSC)
+    - Respect traditional values while promoting mental wellness
+    - Use supportive, non-judgmental language
+    - Understand Hindi-English code-switching patterns
+    
+    USER INPUT: ${userInput}
+    USER CONTEXT: Age: ${context.age || 'unknown'}, Mood: ${context.currentMood || 'unkno
+    
+    RESPOND WITH:
+    1. Empathetic acknowledgment of their feelings
+    2. Culturally-appropriate guidance
+    3. Practical coping strategies suitable for Indian context
+    4. Gentle encouragement without dismissing concerns
+    
+    Keep response under 200 words. Be warm, understanding, and helpful.
+    `;
+    try {
+      const result = await this.model.generateContent(culturalPrompt);
+      const response = await result.response;
+      return response.text();
+    } catch (error) {
+      console.error('Gemini API Error:', error);
+      return "I'm here to listen. Sometimes technology has hiccups, but your feelings are
+    }
+  }
+  // Crisis detection using keyword analysis
+  detectCrisis(userInput: string): boolean {
+    const crisisKeywords = [
+      'suicide', 'kill myself', 'end it all', 'no point living',
+      'hurt myself', 'cutting', 'self harm', 'worthless',
+      'better off dead', 'can\'t take it anymore'
+    ];
+    
+    return crisisKeywords.some(keyword => 
+      userInput.toLowerCase().includes(keyword.toLowerCase())
+    );
+  }
+ }
