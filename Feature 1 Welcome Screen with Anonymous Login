@@ -1,0 +1,85 @@
+// screens/WelcomeScreen.tsx
+ import React from 'react';
+ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+ import { AuthService } from '../services/authService';
+ export default function WelcomeScreen() {
+  const handleAnonymousSignIn = async () => {
+    await AuthService.signInAnonymous();
+  };
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}> MindBridge AI</Text>
+      <Text style={styles.subtitle}>
+        आपका मानिसक वा य साथी{'\n'}
+        Your Mental Wellness Companion
+      </Text>
+      
+      <View style={styles.features}>
+        <Text style={styles.feature}>✨ Culturally-aware AI support</Text>
+        <Text style={styles.feature}> Complete anonymity</Text>
+        <Text style={styles.feature}> 24/7 availability</Text>
+        <Text style={styles.feature}> Made for Indian youth</Text>
+      </View>
+      <TouchableOpacity 
+ Step 4 Core Feature Implementation 2 hours)
+ Feature 1 Welcome Screen with Anonymous Login:
+        style={styles.startButton}
+        onPress={handleAnonymousSignIn}
+      >
+        <Text style={styles.startButtonText}>
+          Start Anonymously - शु कर
+        </Text>
+      </TouchableOpacity>
+      <Text style={styles.disclaimer}>
+         No personal information required{'\n'}
+         Your conversations stay private
+      </Text>
+    </View>
+  );
+ }
+ const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+    backgroundColor: '#f0f9ff',
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#1e40af',
+    marginBottom: 10,
+  },
+  subtitle: {
+    fontSize: 18,
+    textAlign: 'center',
+    color: '#64748b',
+    marginBottom: 40,
+  },
+  features: {
+    marginBottom: 40,
+  },
+  feature: {
+    fontSize: 16,
+    marginBottom: 8,
+    color: '#374151',
+  },
+  startButton: {
+    backgroundColor: '#3b82f6',
+    paddingHorizontal: 30,
+    paddingVertical: 15,
+    borderRadius: 25,
+    marginBottom: 20,
+  },
+  startButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  disclaimer: {
+    fontSize: 14,
+    textAlign: 'center',
+    color: '#6b7280',
+  },
+ })
