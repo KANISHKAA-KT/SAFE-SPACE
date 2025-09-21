@@ -1,0 +1,21 @@
+ // services/authService.ts
+ import { signInAnonymously, onAuthStateChanged, User } from 'firebase/auth';
+ import { auth } from '../config/firebase';
+ export class AuthService {
+ static async signInAnonymous(): Promise<User | null> {
+ try {
+ const result = await signInAnonymously(auth);
+ console.log('Anonymous user signed in:', result.user.uid);
+ return result.user;
+ } catch (error) {
+ console.error('Anonymous sign-in error:', error);
+ return null;
+ }
+ }
+ static getCurrentUser(): User | null {
+ return auth.currentUser;
+ }
+ static onAuthStateChange(callback: (user: User | null) => void) {
+ return onAuthStateChanged(auth, callback);
+ }
+ }
