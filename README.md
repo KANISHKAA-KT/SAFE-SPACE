@@ -19,9 +19,8 @@ SafeSpace delivers culturally sensitive, privacy-first support for students aged
 - TypeScript, React Navigation
 - Jest & React Native Testing Library
 
-<img width="664" height="275" alt="image" src="https://github.com/user-attachments/assets/b3ecc59f-c34b-470b-8ff3-16287a77c7e9" />
-<img width="670" height="268" alt="image" src="https://github.com/user-attachments/assets/6366c4a5-6835-46b8-a168-93ee5a7da813" />
-<img width="672" height="273" alt="image" src="https://github.com/user-attachments/assets/eef424a4-a2fe-4b5f-98ef-38fdaa2c700a" />
+<img width="1319" height="547" alt="image" src="https://github.com/user-attachments/assets/74a64ae9-e965-4adb-9e93-a3e21d4f834c" />
+
 
 
 
