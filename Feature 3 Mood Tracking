@@ -1,0 +1,259 @@
+// screens/MoodTrackingScreen.tsx
+ import React, { useState, useEffect } from 'react';
+ import { 
+View, 
+Text, 
+TouchableOpacity, 
+StyleSheet,
+ Alert 
+} from 'react-native';
+ import { doc, setDoc, getDoc } from 'firebase/firestore';
+ import { db } from '../config/firebase';
+ import { AuthService } from '../services/authService';
+ const MOODS = [
+ { emoji: '😊', label: 'Great', value: 5, color: '#10b981' },
+  { emoji: '', label: 'Good', value: 4, color: '#3b82f6' },
+  { emoji: '😐', label: 'Okay', value: 3, color: '#f59e0b' },
+  { emoji: '😟', label: 'Low', value: 2, color: '#f97316' },
+  { emoji: '😢', label: 'Difficult', value: 1, color: '#ef4444' },
+ ];
+ const ACADEMIC_STRESS_LEVELS = [
+  'No stress',
+  'Mild pressure', 
+  'Moderate stress',
+  'High stress',
+  'Overwhelming'
+ ];
+ export default function MoodTrackingScreen() {
+  const [selectedMood, setSelectedMood] = useState<number | null>(null);
+  const [academicStress, setAcademicStress] = useState<number>(0);
+  const [weeklyData, setWeeklyData] = useState<any[]>([]);
+  useEffect(() => {
+    loadMoodHistory();
+  }, []);
+  const loadMoodHistory = async () => {
+    const user = AuthService.getCurrentUser();
+    if (!user) return;
+    try {
+      const docRef = doc(db, 'users', user.uid);
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setWeeklyData(data.moodHistory || []);
+      }
+    } catch (error) {
+      console.error('Error loading mood history:', error);
+    }
+  };
+  const saveMoodEntry = async () => {
+    if (selectedMood === null) {
+      Alert.alert('Please select your mood');
+      return;
+    }
+    const user = AuthService.getCurrentUser();
+    if (!user) return;
+    const moodEntry = {
+      date: new Date().toISOString().split('T')[^0],
+      mood: selectedMood,
+      academicStress: academicStress,
+      timestamp: new Date()
+    };
+    try {
+      const updatedHistory = [...weeklyData, moodEntry].slice(-30); // Keep last 30 days
+      
+      await setDoc(doc(db, 'users', user.uid), {
+        moodHistory: updatedHistory,
+        lastUpdated: new Date()
+      }, { merge: true });
+      setWeeklyData(updatedHistory);
+      Alert.alert('Mood saved! ', 'Your emotional pattern is being tracked to help you b
+      
+      // Reset form
+      setSelectedMood(null);
+      setAcademicStress(0);
+    } catch (error) {
+      console.error('Error saving mood:', error);
+      Alert.alert('Error', 'Could not save mood. Please try again.');
+    }
+  };
+  const getAverageWeeklyMood = () => {
+    if (weeklyData.length === 0) return 0;
+    
+    const lastWeek = weeklyData.slice(-7);
+    const average = lastWeek.reduce((sum, entry) => sum + entry.mood, 0) / lastWeek.lengt
+    return average.toFixed(1);
+  };
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>How are you feeling today?</Text>
+      <Text style={styles.subtitle}>आज आप कैसा महसूस कर रहे ह?</Text>
+      <View style={styles.moodSelector}>
+        {MOODS.map((mood) => (
+          <TouchableOpacity
+            key={mood.value}
+            style={[
+              styles.moodButton,
+              selectedMood === mood.value && { 
+                backgroundColor: mood.color,
+                transform: [{ scale: 1.1 }]
+              }
+            ]}
+            onPress={() => setSelectedMood(mood.value)}
+          >
+            <Text style={styles.moodEmoji}>{mood.emoji}</Text>
+            <Text style={[
+              styles.moodLabel,
+              selectedMood === mood.value && { color: 'white', fontWeight: 'bold' }
+            ]}>
+              {mood.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+      <Text style={styles.stressTitle}>Academic/Work Stress Level:</Text>
+      <View style={styles.stressSelector}>
+        {ACADEMIC_STRESS_LEVELS.map((level, index) => (
+          <TouchableOpacity
+            key={index}
+            style={[
+              styles.stressButton,
+              academicStress === index && styles.selectedStressButton
+            ]}
+            onPress={() => setAcademicStress(index)}
+          >
+            <Text style={[
+              styles.stressText,
+              academicStress === index && styles.selectedStressText
+            ]}>
+              {level}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+      {weeklyData.length > 0 && (
+        <View style={styles.analyticsContainer}>
+          <Text style={styles.analyticsTitle}>Weekly Average: {getAverageWeeklyMood()}/5<
+          <Text style={styles.analyticsSubtitle}>
+            {parseFloat(getAverageWeeklyMood()) >= 4 ? 
+              ' You\'re doing great this week!' :
+              parseFloat(getAverageWeeklyMood()) >= 3 ?
+              ' Steady progress, keep going!' :
+              ' Remember, tough times are temporary. You\'re stronger than you know.'
+            }
+          </Text>
+        </View>
+      )}
+      <TouchableOpacity 
+        style={[
+          styles.saveButton,
+          selectedMood && { backgroundColor: '#10b981' }
+        ]}
+        onPress={saveMoodEntry}
+        disabled={selectedMood === null}
+      >
+        <Text style={styles.saveButtonText}>Save Mood Entry</Text>
+      </TouchableOpacity>
+    </View>
+  );
+ }
+ const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: '#ffffff',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    color: '#1f2937',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    textAlign: 'center',
+    color: '#6b7280',
+    marginBottom: 30,
+  },
+  moodSelector: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 30,
+  },
+  moodButton: {
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: '#f9fafb',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    minWidth: 60,
+  },
+  moodEmoji: {
+    fontSize: 24,
+    marginBottom: 4,
+  },
+  moodLabel: {
+    fontSize: 12,
+    color: '#374151',
+  },
+  stressTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 15,
+    color: '#1f2937',
+  },
+  stressSelector: {
+    marginBottom: 30,
+  },
+  stressButton: {
+    padding: 12,
+    marginBottom: 8,
+    backgroundColor: '#f9fafb',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  selectedStressButton: {
+    backgroundColor: '#3b82f6',
+    borderColor: '#2563eb',
+  },
+stressText: {
+ textAlign: 'center',
+ color: '#374151',
+ },
+ selectedStressText: {
+ color: 'white',
+ fontWeight: 'bold',
+ },
+ analyticsContainer: {
+ backgroundColor: '#eff6ff',
+ padding: 16,
+ borderRadius: 12,
+ marginBottom: 20,
+ },
+ analyticsTitle: {
+ fontSize: 16,
+ fontWeight: 'bold',
+ color: '#1e40af',
+ textAlign: 'center',
+ },
+ analyticsSubtitle: {
+ fontSize: 14,
+ color: '#3730a3',
+ textAlign: 'center',
+ marginTop: 4,
+ },
+ saveButton: {
+ backgroundColor: '#9ca3af',
+ padding: 16,
+ borderRadius: 12,
+ alignItems: 'center',
+ },
+ saveButtonText: {
+ color: 'white',
+ fontSize: 16,
+ fontWeight: 'bold',
+ },
+ });
