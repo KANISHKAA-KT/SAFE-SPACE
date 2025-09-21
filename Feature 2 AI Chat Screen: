@@ -1,0 +1,236 @@
+// screens/ChatScreen.tsx
+ import React, { useState, useEffect, useRef } from 'react';
+ import { 
+  View, 
+  Text, 
+  TextInput, 
+  TouchableOpacity, 
+  ScrollView, 
+  Alert,
+  StyleSheet 
+} from 'react-native';
+ import { MentalHealthAI } from '../services/geminiService';
+ interface Message {
+  id: string;
+  text: string;
+  isUser: boolean;
+  timestamp: Date;
+  isCrisis?: boolean;
+ }
+ export default function ChatScreen() {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [inputText, setInputText] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const aiService = new MentalHealthAI();
+  const scrollViewRef = useRef<ScrollView>(null);
+  useEffect(() => {
+    // Welcome message
+    const welcomeMessage: Message = {
+      id: '1',
+      text: 'Namaste! I\'m MindBridge AI. म आपकी मानिसक वा य की देखभाल के िलए यहाँ हू ँ। How are 
+      isUser: false,
+      timestamp: new Date()
+    };
+    setMessages([welcomeMessage]);
+  }, []);
+  const sendMessage = async () => {
+    if (!inputText.trim()) return;
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      text: inputText,
+      isUser: true,
+ Feature 2 AI Chat Screen:
+      timestamp: new Date()
+    };
+    setMessages(prev => [...prev, userMessage]);
+    setInputText('');
+    setIsLoading(true);
+    // Crisis detection
+    const isCrisis = aiService.detectCrisis(inputText);
+    if (isCrisis) {
+      Alert.alert(
+        'Emergency Support',
+        'It seems you might be going through a tough time. Would you like me to connect y
+        [
+          { text: 'Not now', style: 'cancel' },
+          { text: 'Yes, please', onPress: () => handleCrisisEscalation() }
+        ]
+      );
+    }
+    try {
+      const aiResponse = await aiService.getCulturallyAwareResponse(
+        inputText, 
+        { currentMood: 'stressed' } // You can track this from mood feature
+      );
+      const aiMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        text: aiResponse,
+        isUser: false,
+        timestamp: new Date(),
+        isCrisis
+      };
+      setMessages(prev => [...prev, aiMessage]);
+    } catch (error) {
+      console.error('Error getting AI response:', error);
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        text: 'I apologize for the technical issue. Your wellbeing matters to me. Please 
+        isUser: false,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    }
+    setIsLoading(false);
+    scrollToBottom();
+  };
+  const handleCrisisEscalation = () => {
+    // In a real app, this would connect to crisis hotlines
+    Alert.alert(
+      'Emergency Contacts',
+      'AASRA: 91-9820466726\nVandrevala Foundation: 1860-2662-345\nSneha: 044-24640050\n\
+    );
+  };
+  const scrollToBottom = () => {
+    setTimeout(() => {
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    }, 100);
+  };
+  return (
+    <View style={styles.container}>
+      <ScrollView 
+        ref={scrollViewRef}
+        style={styles.messagesContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        {messages.map((message) => (
+          <View
+            key={message.id}
+            style={[
+              styles.messageContainer,
+              message.isUser ? styles.userMessage : styles.aiMessage,
+              message.isCrisis && styles.crisisMessage
+            ]}
+          >
+            <Text style={[
+              styles.messageText,
+              message.isUser ? styles.userMessageText : styles.aiMessageText
+            ]}>
+              {message.text}
+            </Text>
+            <Text style={styles.timestamp}>
+              {message.timestamp.toLocaleTimeString('en-IN', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+              })}
+            </Text>
+          </View>
+        ))}
+        {isLoading && (
+          <View style={styles.loadingContainer}>
+            <Text style={styles.loadingText}>MindBridge is thinking... </Text>
+          </View>
+        )}
+      </ScrollView>
+      <View style={styles.inputContainer}>
+        <TextInput
+          style={styles.textInput}
+          value={inputText}
+          onChangeText={setInputText}
+          placeholder="Share your thoughts... अपनी बात कह"
+          placeholderTextColor="#9ca3af"
+          multiline
+          maxLength={500}
+        />
+        <TouchableOpacity 
+          style={[styles.sendButton, { opacity: inputText.trim() ? 1 : 0.5 }]}
+          onPress={sendMessage}
+          disabled={!inputText.trim() || isLoading}
+        >
+          <Text style={styles.sendButtonText}>Send</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+ }
+ const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+  },
+  messagesContainer: {
+    flex: 1,
+    padding: 16,
+  },
+  messageContainer: {
+    maxWidth: '80%',
+    marginBottom: 16,
+    padding: 12,
+    borderRadius: 16,
+  },
+  userMessage: {
+    alignSelf: 'flex-end',
+    backgroundColor: '#3b82f6',
+  },
+  aiMessage: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#f1f5f9',
+    borderColor: '#e2e8f0',
+    borderWidth: 1,
+  },
+  crisisMessage: {
+    borderColor: '#ef4444',
+    borderWidth: 2,
+  },
+  messageText: {
+    fontSize: 16,
+    lineHeight: 22,
+  },
+  userMessageText: {
+    color: '#ffffff',
+  },
+  aiMessageText: {
+    color: '#1f2937',
+  },
+  timestamp: {
+    fontSize: 12,
+    color: '#6b7280',
+    marginTop: 4,
+  },
+  loadingContainer: {
+alignSelf: 'center',
+ padding: 16,
+ },
+ loadingText: {
+ color: '#6b7280',
+ fontStyle: 'italic',
+ },
+ inputContainer: {
+ flexDirection: 'row',
+ padding: 16,
+ backgroundColor: '#f9fafb',
+ borderTopWidth: 1,
+ borderTopColor: '#e5e7eb',
+ },
+ textInput: {
+ flex: 1,
+ borderWidth: 1,
+ borderColor: '#d1d5db',
+ borderRadius: 20,
+ paddingHorizontal: 16,
+ paddingVertical: 12,
+ marginRight: 12,
+ maxHeight: 100,
+ backgroundColor: '#ffffff',
+ },
+ sendButton: {
+ backgroundColor: '#3b82f6',
+ paddingHorizontal: 20,
+ paddingVertical: 12,
+ borderRadius: 20,
+ justifyContent: 'center',
+ },
+ sendButtonText: {
+ color: '#ffffff',
+ fontWeight: 'bold',
+ },
+ });
